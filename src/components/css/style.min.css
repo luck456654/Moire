@@ -1143,12 +1143,14 @@ a {
     color: #d1d1d1;
     text-align: center;
     -webkit-transition: all .2s ease;
-    transition: all .2s ease
+    transition: all .2s ease;
+    cursor: pointer;
 }
 
 .pagination__link[href]:not(:disabled):focus,
 .pagination__link[href]:not(:disabled):hover {
-    color: #222
+    color: #222;
+    cursor:pointer;
 }
 
 .pagination__link--current {
@@ -1431,5 +1433,20 @@ a {
     grid-column: 2/3;
     grid-row: 3/4
 }
-
+.form__color-item{
+    width: 1vw;
+    height: 1vw;
+    border-radius: 50%;
+    border: grey 0.1px solid;
+    margin-right: 0.2vw;
+}
+.form__colors{
+    display: flex;
+    flex-direction: row;
+    list-style: none;
+}
+.form__activeColors{
+    border: firebrick 1.5px solid!important;
+    padding: 3px;
+}
 /*# sourceMappingURL=style.min.css.map */

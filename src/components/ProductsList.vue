@@ -101,10 +101,11 @@
     </header>
 
     <main class="content container">
+   
       <div class="content__top">
         <div class="content__row">
           <h1 class="content__title">Каталог</h1>
-          <span class="content__info"> 152 товара </span>
+          <span class="content__info"> {{ products.length }} товара </span>
         </div>
       </div>
 
@@ -118,7 +119,7 @@
                   class="form__input"
                   type="text"
                   name="min-price"
-                  value="0"
+                  v-model="priceFrom"
                 />
                 <span class="form__value">От</span>
               </label>
@@ -127,11 +128,23 @@
                   class="form__input"
                   type="text"
                   name="max-price"
-                  value="12345"
+                  value="З"
+                  v-model="priceTo"
                 />
                 <span class="form__value">До</span>
               </label>
             </fieldset>
+            <p>Цвет</p>
+            <ul class="form__colors">
+              <li :id="item.item.id" v-for="item in arrColors" :key="item.item.id">
+                <div
+                  @click="filterColors(item.item.id)"
+                  class="form__color-item"
+                  :style="{ backgroundColor: item.item.color }"
+                  v-bind:class="{ form__activeColors: item.sost == true }"
+                ></div>
+              </li>
+            </ul>
 
             <fieldset class="form__block">
               <legend class="form__legend">Категория</legend>
@@ -270,7 +283,11 @@
               </ul>
             </fieldset>
 
-            <button class="filter__submit button button--primery" type="submit">
+            <button
+              class="filter__submit button button--primery"
+              type="button"
+              @click="filter()"
+            >
               Применить
             </button>
             <button class="filter__reset button button--second" type="button">
@@ -281,12 +298,13 @@
 
         <section class="catalog">
           <ul class="catalog__list">
-            <li class="catalog__item" v-for="item in productsCurrent" :key="item.id">
+            <li
+              class="catalog__item"
+              v-for="item in productsCurrent"
+              :key="item.id"
+            >
               <a class="catalog__pic" href="#">
-                <img
-                  :src="item.img"
-                  alt="Название товара"
-                />
+                <img :src="item.img" alt="Название товара" />
               </a>
 
               <h3 class="catalog__title">
@@ -351,6 +369,7 @@
           <ul class="catalog__pagination pagination">
             <li class="pagination__item">
               <a
+                @click="paginationPrev"
                 class="
                   pagination__link
                   pagination__link--arrow
@@ -363,26 +382,23 @@
                 </svg>
               </a>
             </li>
-            <li class="pagination__item">
-              <a class="pagination__link pagination__link--current"> 1 </a>
+            <li
+              class="pagination__item"
+              v-for="item in countPagination"
+              :key="item"
+            >
+              <a
+                class="pagination__link"
+                :class="{ 'pagination__link--current': item === page }"
+                @click="pagination(item)"
+              >
+                {{ item }}
+              </a>
             </li>
-            <li class="pagination__item">
-              <a class="pagination__link" href="#"> 2 </a>
-            </li>
-            <li class="pagination__item">
-              <a class="pagination__link" href="#"> 3 </a>
-            </li>
-            <li class="pagination__item">
-              <a class="pagination__link" href="#"> 4 </a>
-            </li>
-            <li class="pagination__item">
-              <a class="pagination__link" href="#"> ... </a>
-            </li>
-            <li class="pagination__item">
-              <a class="pagination__link" href="#"> 10 </a>
-            </li>
+
             <li class="pagination__item">
               <a
+                @click="paginationNext"
                 class="pagination__link pagination__link--arrow"
                 href="#"
                 aria-label="Следующая страница"
@@ -506,50 +522,163 @@ export default {
   data() {
     return {
       products: [],
-      productsCurrent:[],
-      productsMain:[],
-      page:1,
-      perpage:5,
+      productsCurrent: [],
+      productsMain: [],
+      page: 1,
+      perpage: 5,
+      countPagination: 1,
+      priceFrom: 0,
+      priceTo: 0,
+      filterProductsAll: [],
+      arrColors: [],
+      selectArrColors: [],
+      activeArrColors: [],
     };
   },
   methods: {
     loadProducts() {
       let arrProducts = [];
       axios.get(BASEURL + "products").then((response) => {
-        
         for (let i = 0; i < response.data.items.length; i++) {
-         
           for (let n = 0; n < response.data.items[i].colors.length; n++) {
-           
-            for (let m = 0; m < response.data.items[i].colors[n].gallery?.length; m++) {
-                          
-            arrProducts.push((
-              ({item:response.data.items[i],img:response.data.items[i].colors[n].gallery[m].file.url})
-                  ))
+            for (
+              let m = 0;
+              m < response.data.items[i].colors[n].gallery?.length;
+              m++
+            ) {
+              arrProducts.push({
+                item: response.data.items[i],
+                img: response.data.items[i].colors[n].gallery[m].file.url,
+                colors: response.data.items[i].colors,
+                color: response.data.items[i].colors[n].color.code,
+                price: response.data.items[i].price,
+              });
             }
           }
         }
-        console.log(arrProducts)
-      this.productsMain=this.products
-      this.products = arrProducts;
-      this.setProducts();
+      this.arrColors = [],
+      this.selectArrColors = [],
+      this.activeArrColors = [],
+        this.productsCurrent = this.products;
+        this.products = arrProducts;
+
+        this.calculateNumber(this.products.length);
+        this.collectionCollor();
+        this.setProducts();
       });
     },
-    setProducts(){
-     const offset=(this.page-1)*this.perpage
-     this.productsCurrent=this.products.slice(offset,offset+this.perpage)
-    }
+    setProducts() {
+      this.mainProductsAll = this.products;
+      let offset = (this.page - 1) * this.perpage;
+      this.productsCurrent = this.products.slice(offset, offset + this.perpage);
+    },
+    currentFilterProducts() {
+      let offset = (this.page - 1) * this.perpage;
+      this.filterProductsAll = this.productsCurrent;
+      this.productsCurrent = this.filterProductsAll.slice(
+        offset,
+        offset + this.perpage
+      );
+      this.calculateNumber(this.filterProductsAll.length);
+    },
+
+    calculateNumber(num) {
+      this.countPagination = Math.ceil(num / this.perpage);
+      return this.countPagination;
+    },
+    pagination(item) {
+      this.page = item;
+      if ((this.priceFrom == "0") & (this.priceTo == "0")) {
+        this.loadProducts();
+      }
+      if (this.priceFrom != "0" || this.priceTo != "0") {
+        this.filter();
+      }
+    },
+    paginationPrev() {
+      this.page = this.page - 1;
+    },
+    paginationNext() {
+      this.page = this.page + 1;
+    },
+    filter() {
+      this.filteredFrom();
+      this.filteredTo();
+      this.currentFilterProducts();
+    },
+    filterPriceFrom(value) {
+      return value.price > this.priceFrom;
+    },
+    filterPriceTo(value) {
+      return value.price < this.priceTo;
+    },
+    filteredFrom() {
+      return (this.productsCurrent = this.products.filter(
+        this.filterPriceFrom
+      ));
+    },
+    filteredTo() {
+      return (this.productsCurrent = this.products.filter(this.filterPriceTo));
+    },
+    filteredColors() {
+      
+    },
+    collectionCollor() {
+     
+    this.arrColors = [
+       {item:{ id: 1, color: "#dd0808" },sost:false},
+       {item:{ id: 2, color: "#ffffff" },sost:false},
+       {item:{ id: 3, color: "#180ae6" },sost:false},
+       {item:{ id: 4, color: "#00a814" },sost:false},
+       {item:{ id: 5, color: "#a91e9d" },sost:false},
+       {item:{ id: 6, color: "#000000" },sost:false},
+       {item:{ id: 7, color: "#df8fe0" },sost:false},
+       ] 
+      
+    },
+     addColors() {
+    
+      let activeUlColors = [];
+      for (let c = 0; c < this.arrColors.length; c++) {
+        let findItem = this.selectArrColors.find(
+          (element) => element == this.arrColors[c].item.color 
+        );
+
+        if (typeof findItem == "undefined") {
+        
+          activeUlColors.push({item:{ color: this.arrColors[c].item.color , id: this.arrColors[c].item.id  },sost:false});
+        } else {
+          
+         activeUlColors.push({item:{ color: this.arrColors[c].item.color , id: this.arrColors[c].item.id  },sost:true});
+        }
+      }
+      this.activeArrColors = activeUlColors;
+      this.arrColors=this.activeArrColors;
+    },
+    filterColors(id) {
+     
+      
+      let ulColors = this.selectArrColors;
+      this.selectArrColors.push(this.arrColors[id - 1].item.color );
+      ulColors = Array.from(new Set(ulColors));
+      this.selectArrColors = ulColors;
+      this.addColors();
+      
+
+    },
+   
   },
-  computed:{
-    computedProducts(){
-     return this.setProducts();
-    }
-  },
-  mounted() {
+
+  created() {
     this.loadProducts();
   },
 };
 </script>
+
+
+
+
+
 
 
 
