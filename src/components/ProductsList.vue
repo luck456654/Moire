@@ -101,7 +101,7 @@
     </header>
 
     <main class="content container">
-   
+      {{selectArrColors}}
       <div class="content__top">
         <div class="content__row">
           <h1 class="content__title">Каталог</h1>
@@ -136,9 +136,13 @@
             </fieldset>
             <p>Цвет</p>
             <ul class="form__colors">
-              <li :id="item.item.id" v-for="item in arrColors" :key="item.item.id">
+              <li
+                :id="item.item.id"
+                v-for="item in arrColors"
+                :key="item.item.id"
+              >
                 <div
-                  @click="filterColors(item.item.id)"
+                  @click="filterColors(item,item.item.id)"
                   class="form__color-item"
                   :style="{ backgroundColor: item.item.color }"
                   v-bind:class="{ form__activeColors: item.sost == true }"
@@ -533,6 +537,8 @@ export default {
       arrColors: [],
       selectArrColors: [],
       activeArrColors: [],
+      color: 0,
+      sost:0,
     };
   },
   methods: {
@@ -556,15 +562,13 @@ export default {
             }
           }
         }
-      this.arrColors = [],
-      this.selectArrColors = [],
-      this.activeArrColors = [],
         this.productsCurrent = this.products;
         this.products = arrProducts;
 
         this.calculateNumber(this.products.length);
         this.collectionCollor();
         this.setProducts();
+        this.filterColors(7,this.color);
       });
     },
     setProducts() {
@@ -602,8 +606,9 @@ export default {
       this.page = this.page + 1;
     },
     filter() {
-      this.filteredFrom();
-      this.filteredTo();
+      /*this.filteredFrom();
+      this.filteredTo();*/
+      this.filterColors(this.color);
       this.currentFilterProducts();
     },
     filterPriceFrom(value) {
@@ -620,53 +625,64 @@ export default {
     filteredTo() {
       return (this.productsCurrent = this.products.filter(this.filterPriceTo));
     },
-    filteredColors() {
-      
-    },
     collectionCollor() {
-     
-    this.arrColors = [
-       {item:{ id: 1, color: "#dd0808" },sost:false},
-       {item:{ id: 2, color: "#ffffff" },sost:false},
-       {item:{ id: 3, color: "#180ae6" },sost:false},
-       {item:{ id: 4, color: "#00a814" },sost:false},
-       {item:{ id: 5, color: "#a91e9d" },sost:false},
-       {item:{ id: 6, color: "#000000" },sost:false},
-       {item:{ id: 7, color: "#df8fe0" },sost:false},
-       ] 
-      
+      this.arrColors = [
+        { item: { id: 1, color: "#dd0808" }, sost: false },
+        { item: { id: 2, color: "#ffffff" }, sost: false },
+        { item: { id: 3, color: "#180ae6" }, sost: false },
+        { item: { id: 4, color: "#00a814" }, sost: false },
+        { item: { id: 5, color: "#a91e9d" }, sost: false },
+        { item: { id: 6, color: "#000000" }, sost: false },
+        { item: { id: 7, color: "#df8fe0" }, sost: false },
+      ];
     },
-     addColors() {
-    
+    addColors() {
       let activeUlColors = [];
       for (let c = 0; c < this.arrColors.length; c++) {
         let findItem = this.selectArrColors.find(
-          (element) => element == this.arrColors[c].item.color 
+          (element) => element == this.arrColors[c].item.color
         );
 
         if (typeof findItem == "undefined") {
-        
-          activeUlColors.push({item:{ color: this.arrColors[c].item.color , id: this.arrColors[c].item.id  },sost:false});
+          activeUlColors.push({
+            item: {
+              color: this.arrColors[c].item.color,
+              id: this.arrColors[c].item.id,
+            },
+            sost: false,
+          });
         } else {
-          
-         activeUlColors.push({item:{ color: this.arrColors[c].item.color , id: this.arrColors[c].item.id  },sost:true});
+          activeUlColors.push({
+            item: {
+              color: this.arrColors[c].item.color,
+              id: this.arrColors[c].item.id,
+            },
+            sost: true,
+          });
         }
       }
       this.activeArrColors = activeUlColors;
-      this.arrColors=this.activeArrColors;
+      this.arrColors = this.activeArrColors;
     },
-    filterColors(id) {
-     
-      
+   filterColors(item,id) {
+      alert("filterColors");
       let ulColors = this.selectArrColors;
-      this.selectArrColors.push(this.arrColors[id - 1].item.color );
+      this.selectArrColors.push(this.arrColors[id - 1].item.color);
       ulColors = Array.from(new Set(ulColors));
       this.selectArrColors = ulColors;
       this.addColors();
-      
-
+      this.color = id;
+    /*  if ((item.sost == true) && (this.sost == 1)) {
+        alert("reduceColor");
+        this.reduceColor(item);
+      }*/
     },
    
+   /* reduceColor(item) {
+      let color = this.selectArrColors.findIndex((el) => el == item);
+      this.selectArrColors.splice(color, 1);
+      
+    },*/
   },
 
   created() {
