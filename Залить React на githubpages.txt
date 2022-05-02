@@ -1,0 +1,16 @@
+Что я делал
+1) установил github pages убедился что он добавился в packages.json
+2)добавил в packages.json 
+"homepage": "https://luck456654.github.io/AnimalsREACT",
+в скрипты 
+"predeploy": "npm run build", 
+"deploy": "gh-pages -d build"
+3)запустил в консоли 
+npm run deploy
+никаких ошибок не показало
+4)зашел на сайт в github pages в репозиторий который специально предварительно создал 
+убедился что в github pages появилась новая ветка и она в настройках привязалась к github pages
+5)перешел по ссылке
+6)добавил к url /auth
+
+https://it-shpora.pp.ua/reactjs-github-pages-разворачиваем-проект-deploy-на-github/
